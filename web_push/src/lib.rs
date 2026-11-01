@@ -59,7 +59,7 @@ pub mod vapid;
 
 use std::time::Duration;
 
-use aes_gcm::aead::{array::Array, consts::U16, Generate};
+use aes_gcm::aead::Generate;
 use hkdf::Hkdf;
 use http::{self, header, Request, Uri};
 #[cfg(feature = "vapid")]
@@ -89,7 +89,7 @@ impl std::fmt::Display for Error {
 }
 
 /// HTTP push authentication secret
-pub type Auth = Array<u8, U16>;
+pub type Auth = [u8; 16];
 
 /// Reusable builder for HTTP push requests
 #[derive(Clone, Debug)]
@@ -257,7 +257,7 @@ fn compute_ikm(
     info.extend_from_slice(as_public.as_affine().to_sec1_point(false).as_bytes());
 
     let mut okm = [0u8; 32];
-    let hk = Hkdf::<Sha256>::new(Some(auth), shared.raw_secret_bytes().as_ref());
+    let hk = Hkdf::<Sha256>::new(Some(auth.as_slice()), shared.raw_secret_bytes().as_ref());
     hk.expand(&info, &mut okm)
         .expect("okm length is always 32 bytes, cannot be too large");
 
